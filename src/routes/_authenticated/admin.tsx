@@ -24,11 +24,11 @@ export const Route = createFileRoute("/_authenticated/admin")({
 function AdminPage() {
   const navigate = useNavigate();
   const role = useQuery({
-    queryKey: ["is-admin"],
+    queryKey: ["admin-level"],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("claim_first_admin" as never);
+      const { data, error } = await supabase.rpc("my_admin_level" as never);
       if (error) throw error;
-      return Boolean(data);
+      return (data as unknown as "owner" | "admin" | null) ?? null;
     },
   });
   const [tab, setTab] = useState<Tab>("home");
@@ -45,10 +45,12 @@ function AdminPage() {
   if (!role.data)
     return (
       <div className="mx-auto max-w-md p-8 text-center">
-        <p className="text-lg font-bold">الحساب ده مش مسموح له بدخول لوحة التحكم.</p>
+        <p className="text-lg font-bold">ليس لديك صلاحية الدخول إلى لوحة الإدارة</p>
         <button onClick={logout} className="mt-4 rounded-xl bg-primary px-5 py-3 font-bold text-primary-foreground">تسجيل خروج</button>
       </div>
     );
+  const isOwner = role.data === "owner";
+  const tabs = isOwner ? [...TABS, ["admins", "إدارة المسؤولين"] as const] : TABS;
 
   const go = (t: string, action?: string) => {
     setTab(t as Tab);
