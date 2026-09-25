@@ -1,7 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Search, MapPin, ShieldCheck } from "lucide-react";
+import { Search, MapPin, ShieldCheck, Lightbulb } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { categoriesQuery, areasQuery, providersQuery } from "@/lib/directory";
 import { ProviderCard } from "@/components/ProviderCard";
 import { CategoryIcon } from "@/components/CategoryIcon";
