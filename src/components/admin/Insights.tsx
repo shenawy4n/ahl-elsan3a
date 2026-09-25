@@ -55,22 +55,24 @@ export function Overview({ go }: { go: (tab: string, action?: string) => void })
   );
 }
 
-type Sort = "profile_view" | "phone_click" | "whatsapp_click";
+type Sort = "profile_view" | "phone_click" | "whatsapp_click" | "phone_reveal";
+const KINDS: Sort[] = ["profile_view", "phone_click", "whatsapp_click", "phone_reveal"];
+const blank = () => ({ profile_view: 0, phone_click: 0, whatsapp_click: 0, phone_reveal: 0 });
+const rate = (clicks: number, views: number) => (views ? `${Math.round((clicks / views) * 100)}%` : "—");
 
 export function Analytics() {
   const [range, setRange] = useState<Range>("30");
-  const [sort, setSort] = useState<Sort>("profile_view");
+  const [sort, setSort] = useState<Sort>("phone_click");
   const { providers, categories } = useAll();
   const ev = useEvents(range);
   const e = ev.data ?? [];
 
   const { byCat, byProv } = useMemo(() => {
     const provCat = new Map((providers.data ?? []).map((p) => [p.id, p.category_id]));
-    const blank = () => ({ profile_view: 0, phone_click: 0, whatsapp_click: 0 });
     const byCat = new Map<string, ReturnType<typeof blank>>();
     const byProv = new Map<string, ReturnType<typeof blank>>();
     for (const x of e) {
-      if (x.event_type !== "profile_view" && x.event_type !== "phone_click" && x.event_type !== "whatsapp_click") continue;
+      if (!KINDS.includes(x.event_type as Sort)) continue;
       const t = x.event_type as Sort;
       const cat = x.category_id ?? (x.provider_id ? provCat.get(x.provider_id) : undefined);
       if (cat) { const o = byCat.get(cat) ?? blank(); o[t]++; byCat.set(cat, o); }
@@ -80,44 +82,55 @@ export function Analytics() {
   }, [e, providers.data]);
 
   const cnt = (t: string) => e.filter((x) => x.event_type === t).length;
-  const catRows = (categories.data ?? []).map((c) => ({ c, n: (providers.data ?? []).filter((p) => p.category_id === c.id).length, s: byCat.get(c.id) ?? { profile_view: 0, phone_click: 0, whatsapp_click: 0 } })).sort((a, b) => b.s[sort] - a.s[sort]);
-  const provRows = (providers.data ?? []).map((p) => ({ p, s: byProv.get(p.id) ?? { profile_view: 0, phone_click: 0, whatsapp_click: 0 } }));
-  const top = [...provRows].filter((r) => r.s.phone_click > 0).sort((a, b) => b.s.phone_click - a.s.phone_click).slice(0, 10);
+  const catRows = (categories.data ?? []).map((c) => ({ c, n: (providers.data ?? []).filter((p) => p.category_id === c.id).length, s: byCat.get(c.id) ?? blank() })).sort((a, b) => b.s[sort] - a.s[sort]);
+  const provRows = (providers.data ?? []).map((p) => ({ p, s: byProv.get(p.id) ?? blank() }));
+  const topBy = (k: Sort) => [...provRows].filter((r) => r.s[k] > 0).sort((a, b) => b.s[k] - a.s[k]).slice(0, 10);
   const provSorted = [...provRows].sort((a, b) => b.s[sort] - a.s[sort]).slice(0, 50);
 
   const th = "p-2 text-start font-bold";
   const sortBtn = (k: Sort, l: string) => <button onClick={() => setSort(k)} className={`${btnGhost} ${sort === k ? "bg-primary text-primary-foreground" : ""}`}>{l}</button>;
-
-  return (
-    <div className="grid gap-5">
-      <RangePicker value={range} onChange={setRange} />
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard label="مشاهدات الملفات" value={cnt("profile_view")} />
-        <StatCard label="ضغطات الاتصال" value={cnt("phone_click")} />
-        <StatCard label="ضغطات واتساب" value={cnt("whatsapp_click")} />
-        <StatCard label="عمليات البحث" value={cnt("search")} />
-      </div>
-
+  const topList = (k: Sort, title: string, Icon: typeof Phone, empty: string) => {
+    const rows = topBy(k);
+    return (
       <section className="surface p-4">
-        <h2 className="mb-3 text-lg font-extrabold">الأكثر تواصلاً</h2>
-        {top.length === 0 ? <p className="text-sm text-muted-foreground">مفيش ضغطات اتصال في الفترة دي.</p> : (
+        <h2 className="mb-3 text-lg font-extrabold">{title}</h2>
+        {rows.length === 0 ? <p className="text-sm text-muted-foreground">{empty}</p> : (
           <ol className="grid gap-2">
-            {top.map((r, i) => (
+            {rows.map((r, i) => (
               <li key={r.p.id} className="flex items-center justify-between gap-2 border-b border-border pb-2 last:border-0">
                 <span className="font-bold">{i + 1}. {r.p.name} <span className="text-sm font-normal text-muted-foreground">· {r.p.categories?.name}</span></span>
-                <span className="flex items-center gap-1 font-extrabold text-primary"><Phone className="size-4" />{r.s.phone_click}</span>
+                <span className="flex items-center gap-1 font-extrabold text-primary"><Icon className="size-4" />{r.s[k]}</span>
               </li>
             ))}
           </ol>
         )}
       </section>
+    );
+  };
 
-      <div className="flex flex-wrap items-center gap-1.5 text-sm"><span className="font-bold">ترتيب حسب:</span>{sortBtn("profile_view", "الأكثر مشاهدة")}{sortBtn("phone_click", "الأكثر اتصالاً")}{sortBtn("whatsapp_click", "الأكثر واتساب")}</div>
+  return (
+    <div className="grid gap-5">
+      <RangePicker value={range} onChange={setRange} />
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <StatCard label="مشاهدات الملفات" value={cnt("profile_view")} />
+        <StatCard label="ضغطات الاتصال" value={cnt("phone_click")} />
+        <StatCard label="إظهار الرقم" value={cnt("phone_reveal")} />
+        <StatCard label="ضغطات WhatsApp" value={cnt("whatsapp_click")} />
+        <StatCard label="نسبة التحويل للاتصال" value={rate(cnt("phone_click"), cnt("profile_view"))} />
+        <StatCard label="عمليات البحث" value={cnt("search")} />
+      </div>
+
+      <div className="grid gap-5 md:grid-cols-2">
+        {topList("phone_click", "الأكثر ضغطات اتصال", Phone, "مفيش ضغطات اتصال في الفترة دي.")}
+        {topList("whatsapp_click", "الأكثر ضغطات WhatsApp", MessageCircle, "مفيش ضغطات واتساب في الفترة دي.")}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-1.5 text-sm"><span className="font-bold">ترتيب حسب:</span>{sortBtn("phone_click", "ضغطات الاتصال")}{sortBtn("profile_view", "المشاهدات")}{sortBtn("phone_reveal", "إظهار الرقم")}{sortBtn("whatsapp_click", "WhatsApp")}</div>
 
       <section className="surface overflow-x-auto p-2">
         <h2 className="p-2 text-lg font-extrabold">حسب القسم</h2>
         <table className="w-full text-sm">
-          <thead className="text-muted-foreground"><tr><th className={th}>القسم</th><th className={th}>الصنايعية</th><th className={th}><Eye className="size-4" /></th><th className={th}><Phone className="size-4" /></th><th className={th}><MessageCircle className="size-4" /></th></tr></thead>
+          <thead className="text-muted-foreground"><tr><th className={th}>القسم</th><th className={th}>الصنايعية</th><th className={th}>المشاهدات</th><th className={th}>ضغطات الاتصال</th><th className={th}>ضغطات WhatsApp</th></tr></thead>
           <tbody>{catRows.map((r) => <tr key={r.c.id} className="border-t border-border"><td className="p-2 font-bold">{r.c.name}</td><td className="p-2">{r.n}</td><td className="p-2">{r.s.profile_view}</td><td className="p-2">{r.s.phone_click}</td><td className="p-2">{r.s.whatsapp_click}</td></tr>)}</tbody>
         </table>
       </section>
@@ -125,11 +138,11 @@ export function Analytics() {
       <section className="surface overflow-x-auto p-2">
         <h2 className="p-2 text-lg font-extrabold">حسب الصنايعي</h2>
         <table className="w-full text-sm">
-          <thead className="text-muted-foreground"><tr><th className={th}>الاسم</th><th className={th}>القسم</th><th className={th}><Eye className="size-4" /></th><th className={th}><Phone className="size-4" /></th><th className={th}><MessageCircle className="size-4" /></th></tr></thead>
-          <tbody>{provSorted.map((r) => <tr key={r.p.id} className="border-t border-border"><td className="p-2 font-bold">{r.p.name}</td><td className="p-2">{r.p.categories?.name}</td><td className="p-2">{r.s.profile_view}</td><td className="p-2">{r.s.phone_click}</td><td className="p-2">{r.s.whatsapp_click}</td></tr>)}</tbody>
+          <thead className="text-muted-foreground"><tr><th className={th}>اسم الصنايعي</th><th className={th}>الخدمة/الصنعة</th><th className={th}>عدد المشاهدات</th><th className={th}>إظهار الرقم</th><th className={th}>ضغطات الاتصال</th><th className={th}>ضغطات WhatsApp</th><th className={th}>نسبة التحويل للاتصال</th></tr></thead>
+          <tbody>{provSorted.map((r) => <tr key={r.p.id} className="border-t border-border"><td className="p-2 font-bold">{r.p.name}</td><td className="p-2">{r.p.categories?.name}</td><td className="p-2">{r.s.profile_view}</td><td className="p-2">{r.s.phone_reveal}</td><td className="p-2">{r.s.phone_click}</td><td className="p-2">{r.s.whatsapp_click}</td><td className="p-2">{rate(r.s.phone_click, r.s.profile_view)}</td></tr>)}</tbody>
         </table>
       </section>
-      <p className="flex items-center gap-1 text-xs text-muted-foreground"><Search className="size-3" /> زياراتك كمسؤول مش بتتحسب في الإحصائيات.</p>
+      <p className="flex items-center gap-1 text-xs text-muted-foreground"><Search className="size-3" /> زياراتك كمسؤول مش بتتحسب. ضغطة "اتصال" معناها إن الزائر ضغط الزرار، مش إن المكالمة تمت.</p>
     </div>
   );
 }
