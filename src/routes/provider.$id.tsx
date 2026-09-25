@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { ArrowRight, Phone, MessageCircle, MapPin, Clock, Wallet, Wrench, Flag, Award } from "lucide-react";
+import { ArrowRight, MapPin, Clock, Wallet, Wrench, Flag, Award } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { isPremiumActive, providerQuery, telHref, whatsappHref } from "@/lib/directory";
+import { isPremiumActive, providerQuery } from "@/lib/directory";
 import { PremiumBadge, VerifiedBadge } from "@/components/ProviderCard";
+import { ContactButtons } from "@/components/ContactButtons";
 import { SiteHeader } from "@/components/SiteHeader";
 import { track } from "@/lib/track";
 
@@ -72,20 +73,8 @@ function ProviderPage() {
                 <span className="mx-1.5">·</span>
                 <MapPin className="inline size-4 align-[-2px]" /> {p.areas?.name}
               </p>
-              <div className="mt-5 grid gap-3">
-                <a href={telHref(p.phone)} onClick={() => track("phone_click", { provider_id: p.id, category_id: p.category_id })} className="flex min-h-14 items-center justify-center gap-2 rounded-xl bg-primary text-lg font-extrabold text-primary-foreground">
-                  <Phone className="size-6" /> اتصال {p.phone}
-                </a>
-                {p.whatsapp ? (
-                  <a href={whatsappHref(p.whatsapp)} onClick={() => track("whatsapp_click", { provider_id: p.id, category_id: p.category_id })} target="_blank" rel="noreferrer" className="flex min-h-14 items-center justify-center gap-2 rounded-xl bg-whatsapp text-lg font-extrabold text-whatsapp-foreground">
-                    <MessageCircle className="size-6" /> واتساب
-                  </a>
-                ) : null}
-                {p.secondary_phone ? (
-                  <a href={telHref(p.secondary_phone)} onClick={() => track("phone_click", { provider_id: p.id, category_id: p.category_id })} className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border bg-secondary font-bold">
-                    <Phone className="size-5" /> رقم تاني: {p.secondary_phone}
-                  </a>
-                ) : null}
+              <div className="mt-5">
+                <ContactButtons providerId={p.id} hasWhatsapp={p.has_whatsapp} big />
               </div>
               <div className="mt-5">
                 {p.description ? <p className="mb-3 whitespace-pre-line text-base">{p.description}</p> : null}
