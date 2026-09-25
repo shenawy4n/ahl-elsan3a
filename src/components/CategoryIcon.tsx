@@ -1,0 +1,55 @@
+import {
+  Zap,
+  Droplets,
+  Hammer,
+  PaintRoller,
+  Wrench,
+  AirVent,
+  Plug,
+  Car,
+  CarFront,
+  Building2,
+  Grid3x3,
+  Frame,
+  Layers,
+  Satellite,
+  Scissors,
+  Sparkles,
+  Camera,
+  GraduationCap,
+  Truck,
+  Home,
+  MoreHorizontal,
+  Brush,
+  type LucideIcon,
+} from "lucide-react";
+
+const MAP: Record<string, LucideIcon> = {
+  Zap,
+  Droplets,
+  Hammer,
+  PaintRoller,
+  Wrench,
+  AirVent,
+  Plug,
+  Car,
+  CarFront,
+  Building2,
+  Grid3x3,
+  Frame,
+  Layers,
+  Trowel: Brush,
+  Satellite,
+  Scissors,
+  Sparkles,
+  Camera,
+  GraduationCap,
+  Truck,
+  Home,
+  MoreHorizontal,
+};
+
+export function CategoryIcon({ name, className }: { name?: string | null; className?: string }) {
+  const Icon = (name && MAP[name]) || MoreHorizontal;
+  return <Icon className={className} />;
+}
