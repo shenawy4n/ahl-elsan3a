@@ -1,12 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import { ArrowRight, Phone, MessageCircle, MapPin, Clock, Wallet, Wrench, Flag } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowRight, Phone, MessageCircle, MapPin, Clock, Wallet, Wrench, Flag, Award } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { isPremiumActive, providerQuery, telHref, whatsappHref } from "@/lib/directory";
-import { PremiumBadge } from "@/components/ProviderCard";
+import { PremiumBadge, VerifiedBadge } from "@/components/ProviderCard";
 import { SiteHeader } from "@/components/SiteHeader";
+import { track } from "@/lib/track";
 
 export const Route = createFileRoute("/provider/$id")({
   head: () => ({
@@ -36,6 +37,11 @@ function Row({ icon: Icon, label, value }: { icon: typeof Clock; label: string; 
 function ProviderPage() {
   const { id } = Route.useParams();
   const { data: p, isLoading } = useQuery(providerQuery(id));
+  const pid = p?.id;
+  const pcat = p?.category_id;
+  useEffect(() => {
+    if (pid) track("profile_view", { provider_id: pid, category_id: pcat });
+  }, [pid, pcat]);
 
   return (
     <div className="min-h-screen bg-background pb-12">
@@ -56,7 +62,10 @@ function ProviderPage() {
               ) : null}
               <div className="flex items-start justify-between gap-2">
                 <h1 className="text-2xl font-extrabold">{p.name}</h1>
-                {isPremiumActive(p) ? <PremiumBadge /> : null}
+                <div className="flex flex-wrap justify-end gap-1">
+                  {p.is_verified ? <VerifiedBadge /> : null}
+                  {isPremiumActive(p) ? <PremiumBadge /> : null}
+                </div>
               </div>
               <p className="mt-1 text-base text-muted-foreground">
                 <span className="font-bold text-primary">{p.categories?.name}</span>
@@ -64,22 +73,23 @@ function ProviderPage() {
                 <MapPin className="inline size-4 align-[-2px]" /> {p.areas?.name}
               </p>
               <div className="mt-5 grid gap-3">
-                <a href={telHref(p.phone)} className="flex min-h-14 items-center justify-center gap-2 rounded-xl bg-primary text-lg font-extrabold text-primary-foreground">
+                <a href={telHref(p.phone)} onClick={() => track("phone_click", { provider_id: p.id, category_id: p.category_id })} className="flex min-h-14 items-center justify-center gap-2 rounded-xl bg-primary text-lg font-extrabold text-primary-foreground">
                   <Phone className="size-6" /> اتصال {p.phone}
                 </a>
                 {p.whatsapp ? (
-                  <a href={whatsappHref(p.whatsapp)} target="_blank" rel="noreferrer" className="flex min-h-14 items-center justify-center gap-2 rounded-xl bg-whatsapp text-lg font-extrabold text-whatsapp-foreground">
+                  <a href={whatsappHref(p.whatsapp)} onClick={() => track("whatsapp_click", { provider_id: p.id, category_id: p.category_id })} target="_blank" rel="noreferrer" className="flex min-h-14 items-center justify-center gap-2 rounded-xl bg-whatsapp text-lg font-extrabold text-whatsapp-foreground">
                     <MessageCircle className="size-6" /> واتساب
                   </a>
                 ) : null}
                 {p.secondary_phone ? (
-                  <a href={telHref(p.secondary_phone)} className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border bg-secondary font-bold">
+                  <a href={telHref(p.secondary_phone)} onClick={() => track("phone_click", { provider_id: p.id, category_id: p.category_id })} className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border bg-secondary font-bold">
                     <Phone className="size-5" /> رقم تاني: {p.secondary_phone}
                   </a>
                 ) : null}
               </div>
               <div className="mt-5">
                 {p.description ? <p className="mb-3 whitespace-pre-line text-base">{p.description}</p> : null}
+                <Row icon={Award} label="سنوات الخبرة" value={p.experience_options?.label ?? null} />
                 <Row icon={Wrench} label="الخدمات" value={p.services} />
                 <Row icon={Wallet} label="الأسعار" value={p.price_description} />
                 <Row icon={Clock} label="مواعيد الشغل" value={p.working_hours} />
@@ -95,7 +105,7 @@ function ProviderPage() {
 
 function ReportBox({ providerId }: { providerId: string }) {
   const [open, setOpen] = useState(false);
-  const [reason, setReason] = useState("رقم التليفون غلط");
+  const [reason, setReason] = useState("رقم الهاتف لا يعمل");
   const [details, setDetails] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -112,18 +122,19 @@ function ReportBox({ providerId }: { providerId: string }) {
   if (!open)
     return (
       <button onClick={() => setOpen(true)} className="mt-4 flex w-full items-center justify-center gap-2 py-3 font-bold text-muted-foreground">
-        <Flag className="size-4" /> الإبلاغ عن معلومات خاطئة
+        <Flag className="size-4" /> الإبلاغ عن مشكلة
       </button>
     );
 
   return (
     <section className="surface mt-4 grid gap-3 p-5">
-      <h2 className="text-lg font-extrabold">الإبلاغ عن معلومات خاطئة</h2>
+      <h2 className="text-lg font-extrabold">الإبلاغ عن مشكلة</h2>
       <select value={reason} onChange={(e) => setReason(e.target.value)} className="rounded-xl border border-border bg-card px-3 py-3 text-base">
-        <option>رقم التليفون غلط</option>
-        <option>الصنايعي مبقاش شغال</option>
-        <option>بيانات غلط</option>
-        <option>سبب تاني</option>
+        <option>رقم الهاتف لا يعمل</option>
+        <option>البيانات غير صحيحة</option>
+        <option>الصنايعي لا يعمل بهذه الصنعة</option>
+        <option>البيانات قديمة</option>
+        <option>سبب آخر</option>
       </select>
       <textarea value={details} onChange={(e) => setDetails(e.target.value)} maxLength={500} rows={3} placeholder="تفاصيل (اختياري)" className="rounded-xl border border-border bg-card px-3 py-3 text-base" />
       <div className="grid grid-cols-2 gap-2">

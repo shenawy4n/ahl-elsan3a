@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { track } from "@/lib/track";
 import { ArrowRight, Search as SearchIcon } from "lucide-react";
-import { areasQuery, categoriesQuery, providersQuery } from "@/lib/directory";
+import { areasQuery, categoriesQuery, experienceQuery, providersQuery } from "@/lib/directory";
 import { ProviderCard } from "@/components/ProviderCard";
 import { SiteHeader } from "@/components/SiteHeader";
 
@@ -22,11 +23,16 @@ function CategoryPage() {
   const { id } = Route.useParams();
   const [q, setQ] = useState("");
   const [area, setArea] = useState("");
+  const [exp, setExp] = useState("");
+  const experience = useQuery(experienceQuery);
+  useEffect(() => {
+    track("category_view", { category_id: id });
+  }, [id]);
 
   const categories = useQuery(categoriesQuery);
   const areas = useQuery(areasQuery);
   const results = useQuery(
-    providersQuery({ categoryId: id, search: q || undefined, areaId: area || undefined }),
+    providersQuery({ categoryId: id, search: q || undefined, areaId: area || undefined, experienceId: exp || undefined }),
   );
   const category = (categories.data ?? []).find((c) => c.id === id);
 
@@ -53,7 +59,8 @@ function CategoryPage() {
             placeholder="ابحث داخل الخدمة"
           />
         </div>
-        <div className="surface mb-5 px-4 py-2.5">
+        <div className="mb-5 grid grid-cols-2 gap-2">
+        <div className="surface px-4 py-2.5">
           <select
             value={area}
             onChange={(e) => setArea(e.target.value)}
@@ -66,6 +73,15 @@ function CategoryPage() {
               </option>
             ))}
           </select>
+        </div>
+        <div className="surface px-4 py-2.5">
+          <select value={exp} onChange={(e) => setExp(e.target.value)} className="w-full bg-transparent py-1 text-base outline-none">
+            <option value="">أي خبرة</option>
+            {(experience.data ?? []).map((x) => (
+              <option key={x.id} value={x.id}>{x.label}</option>
+            ))}
+          </select>
+        </div>
         </div>
 
         {(results.data?.length ?? 0) === 0 && !results.isLoading ? (

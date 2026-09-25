@@ -124,6 +124,8 @@ function Home() {
           </section>
         ) : null}
 
+        <SuggestService />
+
         <footer className="mt-10 flex items-center justify-center gap-2 border-t border-border pt-6 text-sm text-muted-foreground">
           <ShieldCheck className="size-4" />
           <Link to="/auth" className="font-bold">
@@ -132,5 +134,41 @@ function Home() {
         </footer>
       </main>
     </div>
+  );
+}
+
+function SuggestService() {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [busy, setBusy] = useState(false);
+  async function send(e: React.FormEvent) {
+    e.preventDefault();
+    const v = name.trim();
+    if (v.length < 2) return;
+    setBusy(true);
+    const { error } = await supabase.from("service_suggestions").insert({ name: v.slice(0, 60) });
+    setBusy(false);
+    if (error) { toast.error("حصلت مشكلة، حاول تاني"); return; }
+    toast.success("شكراً! وصلنا اقتراحك");
+    setName("");
+    setOpen(false);
+  }
+  return (
+    <section className="surface mt-8 p-4">
+      {!open ? (
+        <button onClick={() => setOpen(true)} className="flex w-full items-center justify-center gap-2 py-2 font-bold text-primary">
+          <Lightbulb className="size-5" /> مش لاقي الخدمة؟ اقترح خدمة
+        </button>
+      ) : (
+        <form onSubmit={send} className="grid gap-2">
+          <p className="font-extrabold">اقترح خدمة مش موجودة</p>
+          <input value={name} onChange={(e) => setName(e.target.value)} maxLength={60} placeholder="مثال: تصليح موبايلات" className="rounded-xl border border-border bg-card px-3 py-3 text-base" />
+          <div className="grid grid-cols-2 gap-2">
+            <button disabled={busy} className="rounded-xl bg-primary py-3 font-extrabold text-primary-foreground disabled:opacity-60">إرسال</button>
+            <button type="button" onClick={() => setOpen(false)} className="rounded-xl border border-border py-3 font-bold">إلغاء</button>
+          </div>
+        </form>
+      )}
+    </section>
   );
 }

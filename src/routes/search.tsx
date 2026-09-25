@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { track } from "@/lib/track";
 import { ArrowRight, Search as SearchIcon } from "lucide-react";
 import { areasQuery, providersQuery } from "@/lib/directory";
 import { ProviderCard } from "@/components/ProviderCard";
@@ -29,6 +30,12 @@ function SearchPage() {
   const [q, setQ] = useState(params.q ?? "");
   const [area, setArea] = useState(params.area ?? "");
 
+  useEffect(() => {
+    const t = q.trim();
+    if (t.length < 2) return;
+    const h = setTimeout(() => track("search", { query: t }), 1200);
+    return () => clearTimeout(h);
+  }, [q]);
   const areas = useQuery(areasQuery);
   const results = useQuery(providersQuery({ search: q || undefined, areaId: area || undefined }));
 
