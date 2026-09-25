@@ -103,7 +103,7 @@ export function providersQuery(opts: {
       if (opts.experienceId) q = q.eq("experience_id", opts.experienceId);
       if (opts.premiumOnly) q = q.eq("is_premium", true);
       if (opts.search && opts.search.trim()) {
-        const s = opts.search.trim().replace(/[%,]/g, "");
+        const s = arabicPattern(opts.search);
         const [cats, ars] = await Promise.all([
           supabase.from("categories").select("id").ilike("name", `%${s}%`),
           supabase.from("areas").select("id").ilike("name", `%${s}%`),
@@ -161,8 +161,29 @@ export function providerQuery(id: string) {
   };
 }
 
+/** Lightweight Arabic-tolerant LIKE pattern: كهربا → كهرب (matches كهربائي), أ/ا/إ, ة/ه, ى/ي interchangeable. */
+export function arabicPattern(raw: string) {
+  let s = raw.trim().replace(/[%,()_\\*]/g, "").replace(/[\u064B-\u0652\u0640]/g, "").replace(/\s+/g, " ");
+  if (s.startsWith("ال") && s.length > 4) s = s.slice(2);
+  while (s.length > 3 && /[اأإآةهىيئء]$/.test(s)) s = s.slice(0, -1);
+  return s.replace(/[اأإآ]/g, "_").replace(/[ةه]/g, "_").replace(/[ىي]/g, "_");
+}
+
+/** Normalizes Egyptian numbers to +20XXXXXXXXXX; returns null if invalid. */
+export function normalizeEgPhone(phone: string | null | undefined): string | null {
+  if (!phone) return null;
+  let n = phone.replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d))).replace(/[^\d]/g, "");
+  if (n.startsWith("0020")) n = n.slice(4);
+  else if (n.startsWith("20") && n.length === 12) n = n.slice(2);
+  if (n.startsWith("0")) n = n.slice(1);
+  if (/^1[0125]\d{8}$/.test(n)) return `+20${n}`; // mobile
+  if (/^\d{8,9}$/.test(n)) return `+20${n}`; // landline with area code
+  return null;
+}
+
 export function telHref(phone: string) {
-  return `tel:${phone.replace(/[^\d+]/g, "")}`;
+  const n = normalizeEgPhone(phone);
+  return n ? `tel:${n}` : null;
 }
 
 export function whatsappHref(phone: string) {
