@@ -20,14 +20,14 @@ supabase.auth.onAuthStateChange(() => {
 /** Lightweight, anonymous event logging. Admin activity is never counted. */
 export function track(
   event_type: EventType,
-  extra: { provider_id?: string; category_id?: string; query?: string } = {},
+  extra: { provider_id?: string | undefined; category_id?: string | undefined; query?: string | undefined } = {},
 ) {
   if (typeof window === "undefined") return;
   void isAdmin().then((admin) => {
     if (admin) return;
     void supabase
       .from("analytics_events")
-      .insert({ event_type, ...extra, query: extra.query?.slice(0, 80) })
+      .insert({ event_type, provider_id: extra.provider_id ?? null, category_id: extra.category_id ?? null, query: extra.query?.slice(0, 80) ?? null })
       .then(() => undefined);
   });
 }
