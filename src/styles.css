@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * دليل البلد — design system
+ * أهل الصنعة — design system
  * Warm village signage: sand paper, nile-green actions, clay accents.
  * All colors are oklch semantic tokens. Never hardcode colors in components.
  */

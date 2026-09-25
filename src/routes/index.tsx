@@ -1,7 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Search, MapPin, ShieldCheck } from "lucide-react";
+import { Search, MapPin, ShieldCheck, Lightbulb } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { categoriesQuery, areasQuery, providersQuery } from "@/lib/directory";
 import { ProviderCard } from "@/components/ProviderCard";
 import { CategoryIcon } from "@/components/CategoryIcon";
@@ -10,13 +12,13 @@ import { SiteHeader } from "@/components/SiteHeader";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "دليل البلد — صنايعية وخدمات قريتك" },
+      { title: "أهل الصنعة — صنايعية وخدمات قريتك" },
       {
         name: "description",
         content:
           "دليل بسيط لأرقام الصنايعية وأصحاب الخدمات في القرية: كهربائي، سباك، نجار وغيرهم. اتصل أو كلّمهم على واتساب مباشرة.",
       },
-      { property: "og:title", content: "دليل البلد — صنايعية وخدمات قريتك" },
+      { property: "og:title", content: "أهل الصنعة — صنايعية وخدمات قريتك" },
       {
         property: "og:description",
         content: "ابحث عن صنايعي قريب منك واتصل بيه على طول.",
@@ -48,7 +50,7 @@ function Home() {
         <section className="pt-6">
           <h1 className="text-3xl font-extrabold text-foreground">محتاج صنايعي؟</h1>
           <p className="mt-1 text-muted-foreground">
-            كل أرقام صنايعية البلد في مكان واحد. اتصل أو كلّمه واتساب على طول.
+            كل أرقام الصنايعية في مكان واحد. اتصل أو كلّمه واتساب على طول.
           </p>
 
           <form onSubmit={submit} className="mt-4 space-y-3">
@@ -124,6 +126,8 @@ function Home() {
           </section>
         ) : null}
 
+        <SuggestService />
+
         <footer className="mt-10 flex items-center justify-center gap-2 border-t border-border pt-6 text-sm text-muted-foreground">
           <ShieldCheck className="size-4" />
           <Link to="/auth" className="font-bold">
@@ -132,5 +136,41 @@ function Home() {
         </footer>
       </main>
     </div>
+  );
+}
+
+function SuggestService() {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [busy, setBusy] = useState(false);
+  async function send(e: React.FormEvent) {
+    e.preventDefault();
+    const v = name.trim();
+    if (v.length < 2) return;
+    setBusy(true);
+    const { error } = await supabase.from("service_suggestions").insert({ name: v.slice(0, 60) });
+    setBusy(false);
+    if (error) { toast.error("حصلت مشكلة، حاول تاني"); return; }
+    toast.success("شكراً! وصلنا اقتراحك");
+    setName("");
+    setOpen(false);
+  }
+  return (
+    <section className="surface mt-8 p-4">
+      {!open ? (
+        <button onClick={() => setOpen(true)} className="flex w-full items-center justify-center gap-2 py-2 font-bold text-primary">
+          <Lightbulb className="size-5" /> مش لاقي الخدمة؟ اقترح خدمة
+        </button>
+      ) : (
+        <form onSubmit={send} className="grid gap-2">
+          <p className="font-extrabold">اقترح خدمة مش موجودة</p>
+          <input value={name} onChange={(e) => setName(e.target.value)} maxLength={60} placeholder="مثال: تصليح موبايلات" className="rounded-xl border border-border bg-card px-3 py-3 text-base" />
+          <div className="grid grid-cols-2 gap-2">
+            <button disabled={busy} className="rounded-xl bg-primary py-3 font-extrabold text-primary-foreground disabled:opacity-60">إرسال</button>
+            <button type="button" onClick={() => setOpen(false)} className="rounded-xl border border-border py-3 font-bold">إلغاء</button>
+          </div>
+        </form>
+      )}
+    </section>
   );
 }
