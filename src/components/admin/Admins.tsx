@@ -35,9 +35,9 @@ export function Admins() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     const em = email.trim().toLowerCase();
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) { toast.error(ERR.invalid_email); return; }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) { toast.error(ERR["invalid_email"]); return; }
     if (password && password.length < 8) { toast.error("كلمة السر 8 حروف على الأقل"); return; }
-    if (list.data?.some((a) => a.email === em)) { toast.error(ERR.already_admin); return; }
+    if (list.data?.some((a) => a.email === em)) { toast.error(ERR["already_admin"]); return; }
     setBusy(true);
     try {
       const r = await add({ data: { email: em, password } });

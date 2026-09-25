@@ -96,8 +96,8 @@ export function providersQuery(opts: {
 }) {
   return {
     queryKey: ["providers", opts],
-    queryFn: async (): Promise<ProviderWithRefs[]> => {
-      let q = supabase.from("providers").select(PROVIDER_SELECT).eq("status", "active");
+    queryFn: async (): Promise<PublicProvider[]> => {
+      let q = supabase.from("providers").select(PUBLIC_PROVIDER_SELECT).eq("status", "active");
       if (opts.categoryId) q = q.eq("category_id", opts.categoryId);
       if (opts.areaId) q = q.eq("area_id", opts.areaId);
       if (opts.experienceId) q = q.eq("experience_id", opts.experienceId);
@@ -119,7 +119,7 @@ export function providersQuery(opts: {
       if (opts.limit) q = q.limit(opts.limit);
       const { data, error } = await q;
       if (error) throw error;
-      return (data ?? []) as unknown as ProviderWithRefs[];
+      return (data ?? []) as unknown as PublicProvider[];
     },
   };
 }
@@ -149,14 +149,14 @@ export const settingsQuery = {
 export function providerQuery(id: string) {
   return {
     queryKey: ["provider", id],
-    queryFn: async (): Promise<ProviderWithRefs | null> => {
+    queryFn: async (): Promise<PublicProvider | null> => {
       const { data, error } = await supabase
         .from("providers")
-        .select(PROVIDER_SELECT)
+        .select(PUBLIC_PROVIDER_SELECT)
         .eq("id", id)
         .maybeSingle();
       if (error) throw error;
-      return (data ?? null) as unknown as ProviderWithRefs | null;
+      return (data ?? null) as unknown as PublicProvider | null;
     },
   };
 }
