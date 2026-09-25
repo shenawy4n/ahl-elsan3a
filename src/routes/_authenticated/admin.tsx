@@ -98,6 +98,6 @@ const TABS = [
   ["reports", "البلاغات"],
   ["suggestions", "اقتراحات الخدمات"],
   ["audit", "سجل التغييرات"],
-  ["settings", "الإعدادات"],
+  ["settings", "الإعدادات / الحساب"],
 ] as const;
 type Tab = (typeof TABS)[number][0] | "admins";

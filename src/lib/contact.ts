@@ -4,30 +4,53 @@ import { telHref, whatsappHref } from "@/lib/directory";
 export type ContactKind = "phone_click" | "whatsapp_click" | "phone_reveal";
 type Numbers = { phone: string | null; secondary_phone: string | null; whatsapp: string | null };
 
-const last = new Map<string, number>();
+export class NoNumberError extends Error {}
 
-/** Logs the event on the server (before navigating) and returns the needed number. */
+const last = new Map<string, number>();
+const cache = new Map<string, Numbers>();
+
+/**
+ * Logs the event server-side (awaited, so it is saved before navigation) and returns the number.
+ * Rapid repeat taps within 3s reuse the cached number without logging a duplicate event.
+ */
 async function contact(providerId: string, kind: ContactKind): Promise<Numbers | null> {
   const key = `${providerId}:${kind}`;
   const now = Date.now();
-  if (now - (last.get(key) ?? 0) < 2000) return null; // ignore rapid double taps
+  if (now - (last.get(key) ?? 0) < 3000 && cache.has(key)) return cache.get(key)!;
   last.set(key, now);
   const { data, error } = await supabase.rpc("contact_provider" as never, { _provider_id: providerId, _kind: kind } as never);
   if (error) { last.delete(key); throw error; }
-  const rows = data as unknown as Numbers[] | null;
-  return rows?.[0] ?? null;
+  const row = (data as unknown as Numbers[] | null)?.[0] ?? null;
+  if (row) cache.set(key, row);
+  return row;
+}
+
+/** Opens tel:/wa.me via a real anchor click; target _top escapes embedded previews. */
+function open(href: string, newTab = false) {
+  const a = document.createElement("a");
+  a.href = href;
+  a.target = newTab ? "_blank" : "_top";
+  a.rel = "noopener";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
 }
 
 export async function callProvider(providerId: string) {
   const r = await contact(providerId, "phone_click");
-  if (r?.phone) window.location.href = telHref(r.phone);
+  const href = telHref(r?.phone ?? "") ?? telHref(r?.secondary_phone ?? "");
+  if (!href) throw new NoNumberError();
+  open(href);
 }
 
 export async function whatsappProvider(providerId: string) {
   const r = await contact(providerId, "whatsapp_click");
-  if (r?.whatsapp) window.location.href = whatsappHref(r.whatsapp);
+  if (!r?.whatsapp) throw new NoNumberError();
+  open(whatsappHref(r.whatsapp), true);
 }
 
 export async function revealProvider(providerId: string) {
-  return contact(providerId, "phone_reveal");
+  const r = await contact(providerId, "phone_reveal");
+  if (!r?.phone) throw new NoNumberError();
+  return r;
 }

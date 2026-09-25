@@ -302,7 +302,7 @@ export function Settings() {
     const rows = [...SETTING_FIELDS.map(([k]) => k), "default_provider_status"].map((key) => ({ key, value: v[key]?.trim() || null, updated_at: new Date().toISOString() }));
     const { error } = await supabase.from("app_settings").upsert(rows);
     setBusy(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error("ماقدرناش نحفظ الإعدادات، جرّب تاني"); return; }
     toast.success("اتحفظت الإعدادات");
     setVals(null);
     qc.invalidateQueries();
@@ -310,6 +310,7 @@ export function Settings() {
 
   return (
     <div className="grid gap-5">
+      <ChangePassword />
       <form onSubmit={save} className="surface grid gap-3 p-5">
         <h2 className="text-lg font-extrabold">إعدادات التطبيق</h2>
         {SETTING_FIELDS.map(([k, l, dir]) => (
