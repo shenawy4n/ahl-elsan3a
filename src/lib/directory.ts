@@ -37,14 +37,21 @@ export type Provider = {
 };
 
 export type ProviderWithRefs = Provider & {
+  has_whatsapp?: boolean;
   categories: { id: string; name: string } | null;
   areas: { id: string; name: string } | null;
   experience_options: { id: string; label: string } | null;
 };
 
+/** What the public sees — no phone numbers. */
+export type PublicProvider = Omit<ProviderWithRefs, "phone" | "secondary_phone" | "whatsapp" | "has_whatsapp"> & { has_whatsapp: boolean };
+
 export type ExperienceOption = { id: string; label: string; sort_order: number; status: string };
 
+/** Admin only (includes phone numbers). */
 export const PROVIDER_SELECT = "*, categories(id,name), areas(id,name), experience_options(id,label)";
+export const PUBLIC_PROVIDER_SELECT =
+  "id,name,category_id,area_id,description,services,price_description,working_hours,photo_url,status,is_premium,premium_expires_at,experience_id,is_verified,has_whatsapp,created_at,updated_at, categories(id,name), areas(id,name), experience_options(id,label)";
 
 export function isPremiumActive(p: Pick<Provider, "is_premium" | "premium_expires_at">) {
   if (!p.is_premium) return false;
