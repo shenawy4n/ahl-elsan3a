@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Admins } from "@/components/admin/Admins";
 import { Providers } from "@/components/admin/Providers";
 import { Categories, Areas } from "@/components/admin/Lists";
 import { Overview, Analytics, Reports, Suggestions, AuditLog, Settings } from "@/components/admin/Insights";
@@ -24,11 +25,11 @@ export const Route = createFileRoute("/_authenticated/admin")({
 function AdminPage() {
   const navigate = useNavigate();
   const role = useQuery({
-    queryKey: ["is-admin"],
+    queryKey: ["admin-level"],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("claim_first_admin" as never);
+      const { data, error } = await supabase.rpc("my_admin_level" as never);
       if (error) throw error;
-      return Boolean(data);
+      return (data as unknown as "owner" | "admin" | null) ?? null;
     },
   });
   const [tab, setTab] = useState<Tab>("home");
@@ -45,10 +46,12 @@ function AdminPage() {
   if (!role.data)
     return (
       <div className="mx-auto max-w-md p-8 text-center">
-        <p className="text-lg font-bold">الحساب ده مش مسموح له بدخول لوحة التحكم.</p>
+        <p className="text-lg font-bold">ليس لديك صلاحية الدخول إلى لوحة الإدارة</p>
         <button onClick={logout} className="mt-4 rounded-xl bg-primary px-5 py-3 font-bold text-primary-foreground">تسجيل خروج</button>
       </div>
     );
+  const isOwner = role.data === "owner";
+  const tabs = isOwner ? [...TABS, ["admins", "إدارة المسؤولين"] as const] : TABS;
 
   const go = (t: string, action?: string) => {
     setTab(t as Tab);
@@ -65,7 +68,7 @@ function AdminPage() {
           <button onClick={logout} className="flex items-center gap-1.5 text-sm font-bold text-muted-foreground"><LogOut className="size-4" /> خروج</button>
         </div>
         <nav className="mx-auto flex max-w-5xl gap-1 overflow-x-auto px-4 pb-2">
-          {TABS.map(([k, l]) => (
+          {tabs.map(([k, l]) => (
             <button key={k} onClick={() => go(k)} className={`shrink-0 rounded-lg px-3 py-2 text-sm font-bold ${tab === k ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>{l}</button>
           ))}
         </nav>
@@ -80,6 +83,7 @@ function AdminPage() {
         {tab === "suggestions" && <Suggestions onCreate={(n) => { setCatPrefill(n); setTab("categories"); }} />}
         {tab === "audit" && <AuditLog />}
         {tab === "settings" && <Settings />}
+        {tab === "admins" && isOwner && <Admins />}
       </main>
     </div>
   );
@@ -96,4 +100,4 @@ const TABS = [
   ["audit", "سجل التغييرات"],
   ["settings", "الإعدادات"],
 ] as const;
-type Tab = (typeof TABS)[number][0];
+type Tab = (typeof TABS)[number][0] | "admins";

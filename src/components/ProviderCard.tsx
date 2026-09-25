@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { Phone, MessageCircle, Star, MapPin, BadgeCheck, Award } from "lucide-react";
-import { track } from "@/lib/track";
-import { isPremiumActive, telHref, whatsappHref, type ProviderWithRefs } from "@/lib/directory";
+import { Star, MapPin, BadgeCheck, Award } from "lucide-react";
+import { isPremiumActive, type PublicProvider as ProviderWithRefs } from "@/lib/directory";
+import { ContactButtons } from "@/components/ContactButtons";
 
 export function PremiumBadge() {
   return (
@@ -47,33 +47,8 @@ export function ProviderCard({ provider }: { provider: ProviderWithRefs }) {
         ) : null}
       </Link>
 
-      <div className="mt-3 grid grid-cols-2 gap-2.5">
-        <a
-          href={telHref(provider.phone)}
-          onClick={() => track("phone_click", { provider_id: provider.id, category_id: provider.category_id })}
-          className="flex min-h-13 items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-base font-extrabold text-primary-foreground active:brightness-95"
-        >
-          <Phone className="size-5" /> اتصال
-        </a>
-        {provider.whatsapp ? (
-          <a
-            href={whatsappHref(provider.whatsapp)}
-            onClick={() => track("whatsapp_click", { provider_id: provider.id, category_id: provider.category_id })}
-            target="_blank"
-            rel="noreferrer"
-            className="flex min-h-13 items-center justify-center gap-2 rounded-xl bg-whatsapp py-3.5 text-base font-extrabold text-whatsapp-foreground active:brightness-95"
-          >
-            <MessageCircle className="size-5" /> واتساب
-          </a>
-        ) : (
-          <Link
-            to="/provider/$id"
-            params={{ id: provider.id }}
-            className="flex min-h-13 items-center justify-center gap-2 rounded-xl border border-border bg-secondary py-3.5 text-base font-extrabold text-secondary-foreground"
-          >
-            التفاصيل
-          </Link>
-        )}
+      <div className="mt-3">
+        <ContactButtons providerId={provider.id} hasWhatsapp={provider.has_whatsapp} />
       </div>
     </article>
   );

@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 
-type EventType = "profile_view" | "phone_click" | "whatsapp_click" | "search" | "category_view";
+type EventType = "profile_view" | "phone_click" | "whatsapp_click" | "phone_reveal" | "search" | "category_view";
 
 let adminCheck: Promise<boolean> | null = null;
 function isAdmin() {
