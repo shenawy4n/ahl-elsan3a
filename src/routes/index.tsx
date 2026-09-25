@@ -48,7 +48,7 @@ function Home() {
         <section className="pt-6">
           <h1 className="text-3xl font-extrabold text-foreground">محتاج صنايعي؟</h1>
           <p className="mt-1 text-muted-foreground">
-            كل أرقام كل صنعة عند أهلها. اتصل أو كلّمه واتساب على طول.
+            كل أرقام الصنايعية في مكان واحد. اتصل أو كلّمه واتساب على طول.
           </p>
 
           <form onSubmit={submit} className="mt-4 space-y-3">
