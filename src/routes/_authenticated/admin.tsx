@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Admins } from "@/components/admin/Admins";
 import { Providers } from "@/components/admin/Providers";
 import { Categories, Areas } from "@/components/admin/Lists";
 import { Overview, Analytics, Reports, Suggestions, AuditLog, Settings } from "@/components/admin/Insights";
@@ -67,7 +68,7 @@ function AdminPage() {
           <button onClick={logout} className="flex items-center gap-1.5 text-sm font-bold text-muted-foreground"><LogOut className="size-4" /> خروج</button>
         </div>
         <nav className="mx-auto flex max-w-5xl gap-1 overflow-x-auto px-4 pb-2">
-          {TABS.map(([k, l]) => (
+          {tabs.map(([k, l]) => (
             <button key={k} onClick={() => go(k)} className={`shrink-0 rounded-lg px-3 py-2 text-sm font-bold ${tab === k ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>{l}</button>
           ))}
         </nav>
@@ -82,6 +83,7 @@ function AdminPage() {
         {tab === "suggestions" && <Suggestions onCreate={(n) => { setCatPrefill(n); setTab("categories"); }} />}
         {tab === "audit" && <AuditLog />}
         {tab === "settings" && <Settings />}
+        {tab === "admins" && isOwner && <Admins />}
       </main>
     </div>
   );
@@ -98,4 +100,4 @@ const TABS = [
   ["audit", "سجل التغييرات"],
   ["settings", "الإعدادات"],
 ] as const;
-type Tab = (typeof TABS)[number][0];
+type Tab = (typeof TABS)[number][0] | "admins";
