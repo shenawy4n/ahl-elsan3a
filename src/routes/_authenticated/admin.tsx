@@ -9,10 +9,10 @@ import { isPremiumActive, type Area, type Category, type ProviderWithRefs } from
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
     meta: [
-      { title: "لوحة التحكم — دليل البلد" },
+      { title: "لوحة التحكم — أهل الصنعة" },
       { name: "description", content: "إدارة الصنايعية والأقسام والقرى." },
-      { property: "og:title", content: "لوحة التحكم — دليل البلد" },
-      { property: "og:description", content: "إدارة دليل البلد." },
+      { property: "og:title", content: "لوحة التحكم — أهل الصنعة" },
+      { property: "og:description", content: "إدارة أهل الصنعة." },
       { name: "robots", content: "noindex" },
     ],
   }),

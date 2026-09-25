@@ -11,10 +11,10 @@ import { SiteHeader } from "@/components/SiteHeader";
 export const Route = createFileRoute("/provider/$id")({
   head: () => ({
     meta: [
-      { title: "ملف الصنايعي — دليل البلد" },
+      { title: "ملف الصنايعي — أهل الصنعة" },
       { name: "description", content: "بيانات الصنايعي ورقم التليفون والواتساب للتواصل المباشر." },
-      { property: "og:title", content: "ملف الصنايعي — دليل البلد" },
-      { property: "og:description", content: "اتصل بالصنايعي مباشرة من دليل البلد." },
+      { property: "og:title", content: "ملف الصنايعي — أهل الصنعة" },
+      { property: "og:description", content: "اتصل بالصنايعي مباشرة من أهل الصنعة." },
     ],
   }),
   component: ProviderPage,

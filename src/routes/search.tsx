@@ -15,9 +15,9 @@ export const Route = createFileRoute("/search")({
   }),
   head: () => ({
     meta: [
-      { title: "نتائج البحث — دليل البلد" },
+      { title: "نتائج البحث — أهل الصنعة" },
       { name: "description", content: "ابحث عن صنايعي أو خدمة في قريتك واتصل به مباشرة." },
-      { property: "og:title", content: "نتائج البحث — دليل البلد" },
+      { property: "og:title", content: "نتائج البحث — أهل الصنعة" },
       { property: "og:description", content: "ابحث عن صنايعي أو خدمة في قريتك." },
     ],
   }),

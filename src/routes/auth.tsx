@@ -7,10 +7,10 @@ import { SiteHeader } from "@/components/SiteHeader";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "دخول المسؤول — دليل البلد" },
-      { name: "description", content: "تسجيل دخول مسؤول دليل البلد." },
-      { property: "og:title", content: "دخول المسؤول — دليل البلد" },
-      { property: "og:description", content: "تسجيل دخول مسؤول دليل البلد." },
+      { title: "دخول المسؤول — أهل الصنعة" },
+      { name: "description", content: "تسجيل دخول مسؤول أهل الصنعة." },
+      { property: "og:title", content: "دخول المسؤول — أهل الصنعة" },
+      { property: "og:description", content: "تسجيل دخول مسؤول أهل الصنعة." },
       { name: "robots", content: "noindex" },
     ],
   }),

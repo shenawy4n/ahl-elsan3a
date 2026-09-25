@@ -9,9 +9,9 @@ import { SiteHeader } from "@/components/SiteHeader";
 export const Route = createFileRoute("/category/$id")({
   head: () => ({
     meta: [
-      { title: "خدمة — دليل البلد" },
+      { title: "خدمة — أهل الصنعة" },
       { name: "description", content: "قائمة الصنايعية المتاحين في هذه الخدمة داخل قريتك." },
-      { property: "og:title", content: "خدمة — دليل البلد" },
+      { property: "og:title", content: "خدمة — أهل الصنعة" },
       { property: "og:description", content: "قائمة الصنايعية المتاحين في هذه الخدمة." },
     ],
   }),

@@ -9,8 +9,8 @@ export function SiteHeader() {
             د
           </span>
           <span className="leading-tight">
-            <span className="block text-lg font-extrabold">دليل البلد</span>
-            <span className="block text-xs text-muted-foreground">صنايعية البلد في مكان واحد</span>
+            <span className="block text-lg font-extrabold">أهل الصنعة</span>
+            <span className="block text-xs text-muted-foreground">كل صنعة عند أهلها</span>
           </span>
         </Link>
       </div>
