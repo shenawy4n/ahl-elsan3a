@@ -4,7 +4,7 @@
 
   "project": {
 
-    "name": "Dalil El Balad",
+    "name": "Ahl Elsan3a",
 
     "type": "Local Services Directory MVP",
 
