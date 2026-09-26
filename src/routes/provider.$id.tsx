@@ -97,12 +97,13 @@ function ReportBox({ providerId }: { providerId: string }) {
   const [reason, setReason] = useState("رقم الهاتف لا يعمل");
   const [details, setDetails] = useState("");
   const [busy, setBusy] = useState(false);
+  const [hp, setHp] = useState("");
 
   async function submit() {
     setBusy(true);
-    const { error } = await supabase.from("reports").insert({ provider_id: providerId, reason, details: details.trim().slice(0, 500) || null });
+    const res = await submitPublicForm({ data: { form: "report", provider_id: providerId, reason, details: details.trim().slice(0, 500), website: hp } }).catch(() => ({ ok: false as const, code: "error" as const }));
     setBusy(false);
-    if (error) { toast.error("حصلت مشكلة، حاول تاني"); return; }
+    if (!res.ok) { toast.error(publicFormError(res.code)); return; }
     toast.success("شكراً! وصلنا البلاغ");
     setOpen(false);
     setDetails("");

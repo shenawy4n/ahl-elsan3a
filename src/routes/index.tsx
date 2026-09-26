@@ -143,14 +143,15 @@ function SuggestService() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
+  const [hp, setHp] = useState("");
   async function send(e: React.FormEvent) {
     e.preventDefault();
     const v = name.trim();
     if (v.length < 2) return;
     setBusy(true);
-    const { error } = await supabase.from("service_suggestions").insert({ name: v.slice(0, 60) });
+    const res = await submitPublicForm({ data: { form: "service_suggestion", name: v.slice(0, 60), website: hp } }).catch(() => ({ ok: false as const, code: "error" as const }));
     setBusy(false);
-    if (error) { toast.error("حصلت مشكلة، حاول تاني"); return; }
+    if (!res.ok) { toast.error(publicFormError(res.code)); return; }
     toast.success("شكراً! وصلنا اقتراحك");
     setName("");
     setOpen(false);
