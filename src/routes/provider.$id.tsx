@@ -9,6 +9,7 @@ import { PremiumBadge, VerifiedBadge } from "@/components/ProviderCard";
 import { ContactButtons } from "@/components/ContactButtons";
 import { SiteHeader } from "@/components/SiteHeader";
 import { track } from "@/lib/track";
+import { submitPublicForm, publicFormError } from "@/lib/public-forms.functions";
 
 export const Route = createFileRoute("/provider/$id")({
   head: () => ({
@@ -94,15 +95,16 @@ function ProviderPage() {
 
 function ReportBox({ providerId }: { providerId: string }) {
   const [open, setOpen] = useState(false);
-  const [reason, setReason] = useState("رقم الهاتف لا يعمل");
+  const [reason, setReason] = useState<"رقم الهاتف لا يعمل" | "البيانات غير صحيحة" | "الصنايعي لا يعمل بهذه الصنعة" | "البيانات قديمة" | "سبب آخر">("رقم الهاتف لا يعمل");
   const [details, setDetails] = useState("");
   const [busy, setBusy] = useState(false);
+  const [hp, setHp] = useState("");
 
   async function submit() {
     setBusy(true);
-    const { error } = await supabase.from("reports").insert({ provider_id: providerId, reason, details: details.trim().slice(0, 500) || null });
+    const res = await submitPublicForm({ data: { form: "report", provider_id: providerId, reason, details: details.trim().slice(0, 500), website: hp } }).catch(() => ({ ok: false as const, code: "error" as const }));
     setBusy(false);
-    if (error) { toast.error("حصلت مشكلة، حاول تاني"); return; }
+    if (!res.ok) { toast.error(publicFormError(res.code)); return; }
     toast.success("شكراً! وصلنا البلاغ");
     setOpen(false);
     setDetails("");
@@ -118,7 +120,8 @@ function ReportBox({ providerId }: { providerId: string }) {
   return (
     <section className="surface mt-4 grid gap-3 p-5">
       <h2 className="text-lg font-extrabold">الإبلاغ عن مشكلة</h2>
-      <select value={reason} onChange={(e) => setReason(e.target.value)} className="rounded-xl border border-border bg-card px-3 py-3 text-base">
+      <input value={hp} onChange={(e) => setHp(e.target.value)} name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
+      <select value={reason} onChange={(e) => setReason(e.target.value as typeof reason)} className="rounded-xl border border-border bg-card px-3 py-3 text-base">
         <option>رقم الهاتف لا يعمل</option>
         <option>البيانات غير صحيحة</option>
         <option>الصنايعي لا يعمل بهذه الصنعة</option>

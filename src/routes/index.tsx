@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Search, MapPin, ShieldCheck, Lightbulb } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { submitPublicForm, publicFormError } from "@/lib/public-forms.functions";
 import { categoriesQuery, areasQuery, providersQuery } from "@/lib/directory";
 import { ProviderCard } from "@/components/ProviderCard";
 import { CategoryIcon } from "@/components/CategoryIcon";
@@ -143,14 +144,15 @@ function SuggestService() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
+  const [hp, setHp] = useState("");
   async function send(e: React.FormEvent) {
     e.preventDefault();
     const v = name.trim();
     if (v.length < 2) return;
     setBusy(true);
-    const { error } = await supabase.from("service_suggestions").insert({ name: v.slice(0, 60) });
+    const res = await submitPublicForm({ data: { form: "service_suggestion", name: v.slice(0, 60), website: hp } }).catch(() => ({ ok: false as const, code: "error" as const }));
     setBusy(false);
-    if (error) { toast.error("حصلت مشكلة، حاول تاني"); return; }
+    if (!res.ok) { toast.error(publicFormError(res.code)); return; }
     toast.success("شكراً! وصلنا اقتراحك");
     setName("");
     setOpen(false);
@@ -164,6 +166,7 @@ function SuggestService() {
       ) : (
         <form onSubmit={send} className="grid gap-2">
           <p className="font-extrabold">اقترح خدمة مش موجودة</p>
+          <input value={hp} onChange={(e) => setHp(e.target.value)} name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
           <input value={name} onChange={(e) => setName(e.target.value)} maxLength={60} placeholder="مثال: تصليح موبايلات" className="rounded-xl border border-border bg-card px-3 py-3 text-base" />
           <div className="grid grid-cols-2 gap-2">
             <button disabled={busy} className="rounded-xl bg-primary py-3 font-extrabold text-primary-foreground disabled:opacity-60">إرسال</button>
